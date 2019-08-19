@@ -1,5 +1,3 @@
-import java.util.*;
-
 class Solution {
 
 
@@ -133,16 +131,16 @@ class Solution {
     }
 
 
-    static boolean change_square(char[][] grid, PossibleSet[][] ps, Point p, char t) {
+    static boolean change_point(char[][] grid, PossibleSet[][] possibleSetGrid, Point p, char newVal) {
         char old = grid[p.y][p.x];
         boolean returnval = true;
-        if (t == '.') {
-            grid[p.y][p.x] = t;
+        if (newVal == '.') {
+            grid[p.y][p.x] = newVal;
             Point[] neighbors = neighbor_set(p);
-            for (Point n : neighbors) {
-                if (ps[n.y][n.x] == null)
+            for (Point neighbor : neighbors) {
+                if (possibleSetGrid[neighbor.y][neighbor.x] == null)
                     continue;
-                Point[] neighbors2 = neighbor_set(n);
+                Point[] neighbors2 = neighbor_set(neighbor);
                 boolean found_match = false;
                 for (Point n2 : neighbors2) {
                     if (grid[n2.y][n2.x] == old) {
@@ -151,21 +149,21 @@ class Solution {
                     }
                 }
                 if (!found_match)
-                    ps[n.y][n.x].add(old);
+                    possibleSetGrid[neighbor.y][neighbor.x].add(old);
             }
-            ps[p.y][p.x] = get_possible(grid, p.y, p.x);
+            possibleSetGrid[p.y][p.x] = get_possible(grid, p.y, p.x);
             return true;
         } else {
             Point[] neighbors = neighbor_set(p);
             for (Point n : neighbors) {
-                if (ps[n.y][n.x] != null) {
-                    ps[n.y][n.x].remove(t);
-                    if (ps[n.y][n.x].count == 0)
+                if (possibleSetGrid[n.y][n.x] != null) {
+                    possibleSetGrid[n.y][n.x].remove(newVal);
+                    if (possibleSetGrid[n.y][n.x].count == 0)
                         returnval = false;
                 }
             }
-            grid[p.y][p.x] = t;
-            ps[p.y][p.x] = null;
+            grid[p.y][p.x] = newVal;
+            possibleSetGrid[p.y][p.x] = null;
             return returnval;
         }
     }
@@ -186,14 +184,14 @@ class Solution {
         return grid_to_string(g);
     }
 
-    static boolean solve_rec(char[][] grid, PossibleSet[][] psg, int count) {
-        if (count == 81)
+    static boolean solve_rec(char[][] grid, PossibleSet[][] possibleSetGrid, int solvedCount) {
+        if (solvedCount == 81)
             return true;
         Point p = null;
         int min_found = Integer.MAX_VALUE;
         for (int y = 0; y < 9; y++) {
             for (int x = 0; x < 9; x++) {
-                PossibleSet pos = psg[y][x];
+                PossibleSet pos = possibleSetGrid[y][x];
                 if (pos == null)
                     continue;
                 if (pos.count == 0)
@@ -202,28 +200,28 @@ class Solution {
                     p = new Point(y, x);
                     min_found = 1;
                     break;
-                } else if (psg[y][x].count < min_found) {
+                } else if (possibleSetGrid[y][x].count < min_found) {
                     p = new Point(y, x);
-                    min_found = psg[y][x].count;
+                    min_found = possibleSetGrid[y][x].count;
                 }
             }
             if (min_found == 1)
                 break;
         }
-        char[] choices = psg[p.y][p.x].toArray();
+        char[] choices = possibleSetGrid[p.y][p.x].toArray();
         int i = 0;
         while (i != choices.length) {
             boolean result;
-            if (!change_square(grid, psg, p, choices[i])) {
+            if (!change_point(grid, possibleSetGrid, p, choices[i])) {
                 result = false;
             } else {
-                result = solve_rec(grid, psg, count + 1);
+                result = solve_rec(grid, possibleSetGrid, solvedCount + 1);
             }
             if (result)
                 return true;
             else {
                 i++;
-                change_square(grid, psg, p, '.');
+                change_point(grid, possibleSetGrid, p, '.');
             }
         }
         return false;
